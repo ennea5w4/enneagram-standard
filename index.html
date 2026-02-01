@@ -28,10 +28,11 @@
             width: 90%;
             max-width: 500px;
             background: var(--card-bg);
-            padding: 2.5rem;
+            padding: 2.5rem 2.5rem 1.5rem 2.5rem;
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.05);
             text-align: center;
+            position: relative;
         }
 
         .progress-container {
@@ -80,9 +81,17 @@
             font-size: 0.95rem;
             line-height: 1.8;
         }
-        .art-info { font-size: 0.9rem; color: #666; margin-top: 1rem; font-weight: bold; }
+        .art-info { font-size: 0.9rem; color: #666; margin-top: 1rem; font-weight: bold; line-height: 1.6; }
         .chart-desc { font-size: 0.85rem; color: #888; margin-top: 1rem; }
         canvas { margin-top: 1rem; max-width: 100%; }
+        
+        footer {
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: #bbb;
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
+        }
         
         .hidden { display: none; }
     </style>
@@ -116,13 +125,21 @@
         </div>
 
         <p id="type-description" style="line-height: 1.6; font-size: 0.95rem; margin-bottom: 0.5rem;"></p>
-        <p class="art-info">この結果をもとに、アート診断でさらに詳しく読み解きを行います。</p>
+        
+        <p class="art-info">
+            この結果をもとに、アート診断でさらに詳しく読み解きを行います。<br>
+            この画面をスクリーンショットしてLINEで送ってください。
+        </p>
         
         <canvas id="typeChart"></canvas>
         <p class="chart-desc">スコアは当てはまり度の目安です。最も高いタイプがあなたの傾向になります。</p>
 
         <button class="btn" style="margin-top: 2rem; width: 100%;" onclick="location.reload()">もう一度診断する</button>
     </div>
+
+    <footer>
+        © 2026 Rainy Muse Art Lab
+    </footer>
 </div>
 
 <script>
@@ -193,18 +210,13 @@
         document.getElementById('quiz-area').classList.add('hidden');
         document.getElementById('result-area').style.display = 'block';
 
-        // スコア順にソートして上位2つを取得
         let sortedTypes = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
         let topType = sortedTypes[0];
         let subType = sortedTypes[1];
 
-        // 修正①：形式の変更
         document.getElementById('top-type-display').innerText = `あなたのタイプ候補は ${topType} です`;
-        
-        // 修正⑤：上位2タイプの表示
         document.getElementById('rank1').innerText = `タイプ ${topType}`;
         document.getElementById('rank2').innerText = `タイプ ${subType}`;
-
         document.getElementById('type-description').innerText = typeDetails[topType];
 
         const ctx = document.getElementById('typeChart').getContext('2d');
