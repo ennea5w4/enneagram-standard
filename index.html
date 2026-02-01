@@ -72,7 +72,17 @@
 
         #result-area { display: none; }
         .type-title { font-size: 1.5rem; color: var(--primary-color); margin-bottom: 0.5rem; }
-        canvas { margin-top: 1.5rem; max-width: 100%; }
+        .ranking-box { 
+            background: #f8fbff; 
+            padding: 1rem; 
+            border-radius: 12px; 
+            margin: 1rem 0; 
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+        .art-info { font-size: 0.9rem; color: #666; margin-top: 1rem; font-weight: bold; }
+        .chart-desc { font-size: 0.85rem; color: #888; margin-top: 1rem; }
+        canvas { margin-top: 1rem; max-width: 100%; }
         
         .hidden { display: none; }
     </style>
@@ -97,16 +107,25 @@
     </div>
 
     <div id="result-area">
-        <h2 style="font-size: 1.1rem; color: #888;">診断結果</h2>
-        <div id="top-type" class="type-title">タイプX</div>
-        <p id="type-description" style="line-height: 1.6; font-size: 0.95rem;"></p>
+        <h2 style="font-size: 1.1rem; color: #888; margin-bottom: 1rem;">診断結果</h2>
+        <div id="top-type-display" class="type-title">あなたのタイプ候補は X です</div>
+        
+        <div class="ranking-box">
+            <div><strong>最有力タイプ：</strong> <span id="rank1">タイプX</span></div>
+            <div><strong>サブ傾向タイプ：</strong> <span id="rank2">タイプY</span></div>
+        </div>
+
+        <p id="type-description" style="line-height: 1.6; font-size: 0.95rem; margin-bottom: 0.5rem;"></p>
+        <p class="art-info">この結果をもとに、アート診断でさらに詳しく読み解きを行います。</p>
+        
         <canvas id="typeChart"></canvas>
+        <p class="chart-desc">スコアは当てはまり度の目安です。最も高いタイプがあなたの傾向になります。</p>
+
         <button class="btn" style="margin-top: 2rem; width: 100%;" onclick="location.reload()">もう一度診断する</button>
     </div>
 </div>
 
 <script>
-    // 27問の質問リスト（各タイプ3問ずつ）
     const questions = [
         { text: "物事が完璧でないと落ち着かない。", type: 1 },
         { text: "困っている人を見ると放っておけない。", type: 2 },
@@ -142,13 +161,13 @@
 
     const typeDetails = {
         1: "【改革する人】完璧主義で責任感が強く、常に向上心を持って物事に取り組むタイプです。",
-        2: "【助ける人】思いやりがあり、人のニーズに敏感で、惜しみなく手を差し伸べるタイプです。",
-        3: "【達成する人】成功を追求し、効率的に目標を達成することで価値を感じるエネルギッシュなタイプです。",
-        4: "【個性を求める人】感受性が豊かで、自分自身の内面や独特の世界観を大切にするクリエイティブなタイプです。",
-        5: "【調べる人】知識欲が旺盛で、物事を客観的に観察し、本質を理解しようとする知的なタイプです。",
+        2: "【助ける人】思いやりがあり、人のニーズに敏感で、惜しみなく手を差し呈べるタイプです。",
+        3: "【達成する人】成功を追求し、効率的に目標を達成することで価値を感じるタイプです。",
+        4: "【個性を求める人】感受性が豊かで、自分自身の内面や独特の世界観を大切にするタイプです。",
+        5: "【調べる人】知識欲が旺盛で、物事を客観的に観察し、本質を理解しようとするタイプです。",
         6: "【忠実な人】慎重で責任感が強く、周囲との協力や安全を重視する、信頼されるタイプです。",
         7: "【熱中する人】楽天的で冒険心が強く、常に楽しいことや新しい可能性を追い求めるタイプです。",
-        8: "【挑戦する人】強さとリーダーシップを持ち、正義感を持って自分の意志を通すパワフルなタイプです。",
+        8: "【挑戦する人】強さとリーダーシップを持ち、正義感を持って自分の意志を通すタイプです。",
         9: "【平和をもたらす人】穏やかで包容力があり、周囲との調和や心の平和を最も大切にするタイプです。"
     };
 
@@ -174,8 +193,18 @@
         document.getElementById('quiz-area').classList.add('hidden');
         document.getElementById('result-area').style.display = 'block';
 
-        let topType = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-        document.getElementById('top-type').innerText = `あなたは タイプ ${topType}`;
+        // スコア順にソートして上位2つを取得
+        let sortedTypes = Object.keys(scores).sort((a, b) => scores[b] - scores[a]);
+        let topType = sortedTypes[0];
+        let subType = sortedTypes[1];
+
+        // 修正①：形式の変更
+        document.getElementById('top-type-display').innerText = `あなたのタイプ候補は ${topType} です`;
+        
+        // 修正⑤：上位2タイプの表示
+        document.getElementById('rank1').innerText = `タイプ ${topType}`;
+        document.getElementById('rank2').innerText = `タイプ ${subType}`;
+
         document.getElementById('type-description').innerText = typeDetails[topType];
 
         const ctx = document.getElementById('typeChart').getContext('2d');
