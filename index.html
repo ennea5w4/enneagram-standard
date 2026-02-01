@@ -8,13 +8,13 @@
     <style>
         :root {
             --primary-color: #4a90e2;
-            --bg-color: #f5f7fa;
+            --bg-color: #f0f2f5;
             --card-bg: #ffffff;
             --text-color: #333;
         }
 
         body {
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -26,51 +26,53 @@
 
         .container {
             width: 90%;
-            max-width: 600px;
+            max-width: 500px;
             background: var(--card-bg);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
             text-align: center;
         }
 
         .progress-container {
             width: 100%;
-            height: 8px;
+            height: 6px;
             background: #eee;
-            border-radius: 4px;
+            border-radius: 10px;
             margin-bottom: 2rem;
-            overflow: hidden;
         }
 
         .progress-bar {
             height: 100%;
             background: var(--primary-color);
             width: 0%;
+            border-radius: 10px;
             transition: width 0.3s ease;
         }
 
-        .question-box { margin-bottom: 2rem; }
-        .question-text { font-size: 1.2rem; font-weight: bold; margin-bottom: 1.5rem; }
+        .question-box { margin-bottom: 2rem; min-height: 120px; }
+        .question-text { font-size: 1.2rem; font-weight: bold; line-height: 1.5; color: #444; }
 
-        .options { display: grid; gap: 10px; }
+        .options { display: grid; gap: 12px; }
         .btn {
-            padding: 12px;
-            border: 2px solid var(--primary-color);
-            background: transparent;
-            color: var(--primary-color);
-            border-radius: 8px;
+            padding: 14px;
+            border: 1.5px solid #e0e0e0;
+            background: white;
+            color: #555;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 1rem;
             transition: all 0.2s;
         }
         .btn:hover {
-            background: var(--primary-color);
-            color: white;
+            border-color: var(--primary-color);
+            background: #f8fbff;
+            color: var(--primary-color);
         }
 
         #result-area { display: none; }
-        canvas { margin-top: 1.5rem; }
+        .type-title { font-size: 1.5rem; color: var(--primary-color); margin-bottom: 0.5rem; }
+        canvas { margin-top: 1.5rem; max-width: 100%; }
         
         .hidden { display: none; }
     </style>
@@ -83,7 +85,7 @@
             <div id="progress-bar" class="progress-bar"></div>
         </div>
         <div class="question-box">
-            <p id="question-number" style="color: #888;">Question 1</p>
+            <p id="question-number" style="color: #aaa; font-size: 0.9rem; margin-bottom: 0.5rem;">Question 1 / 27</p>
             <p id="question-text" class="question-text">読み込み中...</p>
         </div>
         <div class="options">
@@ -95,41 +97,59 @@
     </div>
 
     <div id="result-area">
-        <h2>あなたの診断結果</h2>
-        <h1 id="top-type" style="color: var(--primary-color);">タイプX</h1>
-        <p id="type-description">タイプの説明がここに表示されます。</p>
+        <h2 style="font-size: 1.1rem; color: #888;">診断結果</h2>
+        <div id="top-type" class="type-title">タイプX</div>
+        <p id="type-description" style="line-height: 1.6; font-size: 0.95rem;"></p>
         <canvas id="typeChart"></canvas>
-        <button class="btn" style="margin-top: 2rem;" onclick="location.reload()">もう一度診断する</button>
+        <button class="btn" style="margin-top: 2rem; width: 100%;" onclick="location.reload()">もう一度診断する</button>
     </div>
 </div>
 
 <script>
-    // 質問リスト（各タイプ2問ずつの簡易版例：実際には各5〜10問推奨）
+    // 27問の質問リスト（各タイプ3問ずつ）
     const questions = [
-        { text: "完璧主義で、物事が正しく行われないと気になる。", type: 1 },
-        { text: "他人のニーズに敏感で、助けたいと思う。", type: 2 },
-        { text: "成功することや、効率的に成果を出すことが重要だ。", type: 3 },
-        { text: "自分は他人とはどこか違い、独特であると感じる。", type: 4 },
-        { text: "情報を収集し、物事を客観的に分析するのが好きだ。", type: 5 },
-        { text: "周囲の安全や、ルールを守ることに慎重になる。", type: 6 },
-        { text: "常に新しい楽しい体験を求め、退屈を避けたい。", type: 7 },
-        { text: "強さを重視し、物事をコントロールしていたい。", type: 8 },
-        { text: "平和を好み、対立を避けて穏やかに過ごしたい。", type: 9 }
+        { text: "物事が完璧でないと落ち着かない。", type: 1 },
+        { text: "困っている人を見ると放っておけない。", type: 2 },
+        { text: "目標を達成するためなら努力を惜しまない。", type: 3 },
+        { text: "自分は他の人とは違う特別な感性があると思う。", type: 4 },
+        { text: "感情に流されず、冷静に分析することが得意だ。", type: 5 },
+        { text: "ルールや規則を守ることで安心を感じる。", type: 6 },
+        { text: "常に新しい計画や楽しい予定を立てていたい。", type: 7 },
+        { text: "自分の意見をはっきり言い、場を仕切ることが多い。", type: 8 },
+        { text: "争いごとは避け、みんなと穏やかに過ごしたい。", type: 9 },
+        { text: "ミスや間違いを修正することに一生懸命になる。", type: 1 },
+        { text: "人から感謝されることが何よりの喜びだ。", type: 2 },
+        { text: "周囲から仕事ができる人だと思われたい。", type: 3 },
+        { text: "孤独を感じることもあるが、一人の時間も大切だ。", type: 4 },
+        { text: "物事の仕組みや原理を深く知りたい。", type: 5 },
+        { text: "将来のリスクに備えて準備を欠かさない。", type: 6 },
+        { text: "嫌なことがあっても、すぐに切り替えられる。", type: 7 },
+        { text: "弱い者を守るためなら、強い相手にも立ち向かう。", type: 8 },
+        { text: "決断を迫られるより、流れに任せるほうが楽だ。", type: 9 },
+        { text: "自分にも他人にも厳しくなりがちだ。", type: 1 },
+        { text: "自分を犠牲にしてでも誰かの役に立ちたい。", type: 2 },
+        { text: "効率を重視し、無駄なことはしたくない。", type: 3 },
+        { text: "自分の世界観や美意識を大切にしている。", type: 4 },
+        { text: "専門的な知識を蓄えることに没頭できる。", type: 5 },
+        { text: "信頼できるリーダーや仲間に支えられたい。", type: 6 },
+        { text: "好奇心旺盛で、いろいろなことに手を出したくなる。", type: 7 },
+        { text: "自分の力で道を切り拓いていく自信がある。", type: 8 },
+        { text: "周囲の雰囲気が悪くなると、仲裁したくなる。", type: 9 }
     ];
 
     let currentIdx = 0;
     let scores = { 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0 };
 
     const typeDetails = {
-        1: "【改革する人】常に正しく、改善しようとする努力家です。",
-        2: "【助ける人】温厚で、他者の助けになることに喜びを感じます。",
-        3: "【達成する人】目標に向かって効率的に行動し、成功を収めます。",
-        4: "【個性を求める人】感受性が豊かで、自分らしさを大切にします。",
-        5: "【調べる人】観察力が鋭く、知識を深めることを好みます。",
-        6: "【忠実な人】責任感が強く、慎重にリスクを回避します。",
-        7: "【熱中する人】楽天的で好奇心旺盛、人生を楽しみます。",
-        8: "【挑戦する人】自信に溢れ、リーダーシップを発揮します。",
-        9: "【平和をもたらす人】穏やかで包容力があり、和を保ちます。"
+        1: "【改革する人】完璧主義で責任感が強く、常に向上心を持って物事に取り組むタイプです。",
+        2: "【助ける人】思いやりがあり、人のニーズに敏感で、惜しみなく手を差し伸べるタイプです。",
+        3: "【達成する人】成功を追求し、効率的に目標を達成することで価値を感じるエネルギッシュなタイプです。",
+        4: "【個性を求める人】感受性が豊かで、自分自身の内面や独特の世界観を大切にするクリエイティブなタイプです。",
+        5: "【調べる人】知識欲が旺盛で、物事を客観的に観察し、本質を理解しようとする知的なタイプです。",
+        6: "【忠実な人】慎重で責任感が強く、周囲との協力や安全を重視する、信頼されるタイプです。",
+        7: "【熱中する人】楽天的で冒険心が強く、常に楽しいことや新しい可能性を追い求めるタイプです。",
+        8: "【挑戦する人】強さとリーダーシップを持ち、正義感を持って自分の意志を通すパワフルなタイプです。",
+        9: "【平和をもたらす人】穏やかで包容力があり、周囲との調和や心の平和を最も大切にするタイプです。"
     };
 
     function showQuestion() {
@@ -154,28 +174,27 @@
         document.getElementById('quiz-area').classList.add('hidden');
         document.getElementById('result-area').style.display = 'block';
 
-        // 最高得点のタイプを特定
         let topType = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-        document.getElementById('top-type').innerText = `タイプ ${topType}`;
+        document.getElementById('top-type').innerText = `あなたは タイプ ${topType}`;
         document.getElementById('type-description').innerText = typeDetails[topType];
 
-        // チャート描画
         const ctx = document.getElementById('typeChart').getContext('2d');
         new Chart(ctx, {
             type: 'radar',
             data: {
                 labels: ['Type 1', 'Type 2', 'Type 3', 'Type 4', 'Type 5', 'Type 6', 'Type 7', 'Type 8', 'Type 9'],
                 datasets: [{
-                    label: 'あなたのスコア',
+                    label: 'タイプ別スコア',
                     data: Object.values(scores),
                     backgroundColor: 'rgba(74, 144, 226, 0.2)',
                     borderColor: 'rgba(74, 144, 226, 1)',
-                    borderWidth: 2
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(74, 144, 226, 1)'
                 }]
             },
             options: {
                 scales: {
-                    r: { beginAtZero: true, max: 10 } // 質問数に応じて調整
+                    r: { beginAtZero: true, max: 9, ticks: { display: false } }
                 }
             }
         });
@@ -185,4 +204,4 @@
 </script>
 
 </body>
-</html># enneagram-standard
+</html>
